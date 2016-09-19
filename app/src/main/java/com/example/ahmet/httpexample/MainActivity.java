@@ -11,8 +11,14 @@ import android.os.Bundle;
 import android.support.v7.widget.ButtonBarLayout;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,8 +27,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GetTweetsAsyncTask.IData{
 private ImageView imageView;
 
     @Override
@@ -33,18 +40,22 @@ private ImageView imageView;
         imageView = (ImageView) findViewById(R.id.imageView);
 
 
+        new GetTweetsAsyncTask(this).execute("some URL");
+
+
         Button checkConnectionButton = (Button) findViewById(R.id.button);
         checkConnectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (isConnectedOnline()) {
                     //new GetData().execute("http://rss.cnn.com/rss/cnn_tech.rss");
-                    RequestParams requestParams = new RequestParams("POST", "http://dev.theappsdr.com/lectures/params.php");
+                    RequestParams requestParams = new RequestParams("GET", "http://liisp.uncc.edu/~mshehab/api/json/persons-v1.json");
                     requestParams.addParam("Param1","Parameter");
                     requestParams.addParam("Param2","Parameter is very nice");
                     new GetDataWithParams().execute(requestParams);
                 }
             }
+
         });
 
         findViewById(R.id.getImage).setOnClickListener(new View.OnClickListener() {
@@ -57,6 +68,13 @@ private ImageView imageView;
         });
     }
 
+
+    public void setupData(LinkedList<String> data){
+        ListView listView = (ListView) findViewById(R.id.listView);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,android.R.id.text1, data);
+        listView.setAdapter(adapter);
+    }
     private class GetData extends AsyncTask<String, Void, String> {
 
         @Override
@@ -111,7 +129,19 @@ private ImageView imageView;
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             if (result != null) {
-                Log.d("test", result);
+
+                JSONObject jsonObject = null;
+                try {
+                    jsonObject = new JSONObject(result);
+                    JSONArray personsJSONArray = jsonObject.getJSONArray("persons");
+
+                    for (int i=0; i<personsJSONArray.length(); i++){
+                        JSONObject personsJSONObject = personsJSONArray.getJSONObject(i);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.d("test", jsonObject.toString());
             } else {
                 Log.d("test", "No Data received");
             }
